@@ -33,8 +33,12 @@ push.states: bb.push bw.push by.push hh.push he.push mv.push ni.push nw.push rp.
 sync.states: states.config states.pull states.mmmeta states.upload
 
 he.run_prod:
+	mkdir -p ./data/store/$*/_mmmeta
+	sed "s/<scraper_name>/$*/" config.yml.tmpl > ./data/store/$*/_mmmeta/config.yml
 	# don't ddos hessen
 	MEMORIOUS_HTTP_RATE_LIMIT=30 MMMETA=./data/store/he memorious run he --threads=4
+	ls ./data/store/$*/*.pdf | wc
+	ls ./data/store/$*/*.json | wc
 
 parlamentsspiegel.run_prod:
 	# don't go back too far
@@ -46,10 +50,16 @@ vsberichte.run_prod:
 
 
 %.run_prod:
+	mkdir -p ./data/store/$*/_mmmeta
+	sed "s/<scraper_name>/$*/" config.yml.tmpl > ./data/store/$*/_mmmeta/config.yml
 	MMMETA=./data/store/$* memorious run $* --threads=4
+	ls ./data/store/$*/*.pdf | wc
+	ls ./data/store/$*/*.json | wc
 
 run.%:
 	memorious run $*
+	ls ./data/store/$*/*.pdf | wc
+	ls ./data/store/$*/*.json | wc
 
 install:
 	pip install -e .
@@ -76,13 +86,13 @@ install.test: install.dev
 	MMMETA=./data/store/$* mmmeta generate
 
 %.pull:
-	aws --endpoint-url $(ARCHIVE_ENDPOINT_URL) s3 sync s3://$(DATA_BUCKET)/$*/_mmmeta/db/ ./data/store/$*/_mmmeta/db
+	#aws --endpoint-url $(ARCHIVE_ENDPOINT_URL) s3 sync s3://$(DATA_BUCKET)/$*/_mmmeta/db/ ./data/store/$*/_mmmeta/db
 
 %.push:
-	aws --endpoint-url $(ARCHIVE_ENDPOINT_URL) s3 sync --exclude "*.db*" ./data/store/$*/_mmmeta/ s3://$(DATA_BUCKET)/$*/_mmmeta
+	#aws --endpoint-url $(ARCHIVE_ENDPOINT_URL) s3 sync --exclude "*.db*" ./data/store/$*/_mmmeta/ s3://$(DATA_BUCKET)/$*/_mmmeta
 
 %.upload:
-	aws --endpoint-url $(ARCHIVE_ENDPOINT_URL) s3 sync --exclude "*.db*" ./data/store/$*/ s3://$(DATA_BUCKET)/$*
+	#aws --endpoint-url $(ARCHIVE_ENDPOINT_URL) s3 sync --exclude "*.db*" ./data/store/$*/ s3://$(DATA_BUCKET)/$*
 
 test: install.test
 	rm -rf testdata
